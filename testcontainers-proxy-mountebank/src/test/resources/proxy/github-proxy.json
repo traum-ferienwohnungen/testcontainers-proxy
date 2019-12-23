@@ -1,0 +1,29 @@
+{
+  "imposters": [
+    {
+      "port": 5050,
+      "protocol": "http",
+      "name": "feratel-proxy",
+      "stubs": [
+        {
+          "responses": [
+            {
+              "proxy": {
+                "to": "https://api.github.com",
+                "mode": "proxyAlways",
+                "predicateGenerators": [
+                  {
+                    "matches": {
+                      "method": true,
+                      "path": true
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

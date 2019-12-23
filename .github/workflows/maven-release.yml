@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up JDK 11
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+    - name: Cache Maven Dependencies
+      if: always()
+      uses: actions/cache@v1
+      with:
+        path: ~/.m2/repository
+        key: mvn-repository
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+    - name: Maven Release
+      id: maven_release
+      env:
+        GITHUB_ACTOR: ${{ github.actor }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+        GPG_KEYNAME: ${{ secrets.GPG_PRIVATE_KEY_NAME }}
+      run: |
+        mkdir -p ~/.docker && echo "{}" > ~/.docker/config.json
+        echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --no-tty --import
+        export TAG=$(echo ${{ github.ref }} | sed 's@refs/tags/v@@g') && cp .mvn/release.template.properties release.properties && sed -i 's/__TAG__/'"$TAG"'/g' release.properties
+        sed -i 's@<password>.*$@<password>${{ secrets.GITHUB_TOKEN }}</password>@g' ${{ github.workspace }}/.mvn/settings.xml
+        mvn deploy --settings ${{ github.workspace }}/.mvn/settings.xml --batch-mode --no-transfer-progress -Prelease -Dmaven.wagon.http.pool=false
+        echo "##[set-output name=tag;]$(echo $TAG)"
+    - name: GitHub Release
+      id: github_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.maven_release.outputs.tag }}
+        release_name: v${{ steps.maven_release.outputs.tag }}
+        body:
+        draft: false
+        prerelease: false
+    - name: GitHub Release Upload
+      id: github_release_upload
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: find . -name "*.jar" -exec .github/upload-github-release-asset.sh repo=${{ github.repository }} id=${{ steps.github_release.outputs.id }} filename={} ";"

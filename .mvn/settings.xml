@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<settings>
+    <servers>
+        <server>
+            <id>github</id>
+            <username>schulzp</username>
+            <password>{YF75U2a519gHCRs3XAJ8ujpRkgd4RWUGtnCEJaxCaqXoOa2Yi8RtvCqHr4IJmVGZAZalTY6H+n1tqaabN3KwyQ==}</password>
+        </server>
+    </servers>
+    <profiles>
+        <profile>
+            <id>github</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
+                <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+
+                <altDeploymentRepository>github::https://maven.pkg.github.com/traum-ferienwohnungen/testcontainers-proxy</altDeploymentRepository>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>github</id>
+                    <name>GitHub Apache Maven Packages</name>
+                    <url>https://maven.pkg.github.com/traum-ferienwohnungen/testcontainers-proxy</url>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+</settings>
