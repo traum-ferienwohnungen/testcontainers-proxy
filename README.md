@@ -10,7 +10,7 @@ which processes launches an configures a proxy for every test annotated with `@W
 
 ## Installation
 
-All library artifacts are released as github packages which can be found here:
+All library artifacts are released as [github packages](https://github.com/traum-ferienwohnungen/testcontainers-proxy/packages) which can be found here:
 
 ```xml
 <repositories>
@@ -21,6 +21,19 @@ All library artifacts are released as github packages which can be found here:
     </repository>
 </repositories>
 ```
+
+Since github requires authentication (with a token) they are also published on [bintray](https://bintray.com/traum-ferienwohnungen/maven/testcontainers-proxy):
+
+```xml
+<repositories>
+    <repository>
+        <id>bintray</id>
+        <name>JFrog Bintray Apache Maven Packages</name>
+        <url>https://dl.bintray.com/traum-ferienwohnungen/maven</url>
+    </repository>
+</repositories>
+```
+
 This library assumes [`org.testcontainers:testcontainers`](https://mvnrepository.com/artifact/org.testcontainers/testcontainers) is available at runtime.
 Therefore, the minimum set of dependencies looks as follows:
 

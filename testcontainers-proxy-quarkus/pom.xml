@@ -3,7 +3,8 @@
     <parent>
         <artifactId>testcontainers-proxy-parent</artifactId>
         <groupId>com.traum</groupId>
-        <version>0.0.0-SNAPSHOT</version>
+        <version>999-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -28,4 +29,13 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

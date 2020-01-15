@@ -4,19 +4,28 @@
         <server>
             <id>github</id>
             <username>schulzp</username>
-            <password>{YF75U2a519gHCRs3XAJ8ujpRkgd4RWUGtnCEJaxCaqXoOa2Yi8RtvCqHr4IJmVGZAZalTY6H+n1tqaabN3KwyQ==}</password>
+            <password>__GITHUB_TOKEN__</password>
+        </server>
+        <server>
+            <id>bintray</id>
+            <username>schulzp</username>
+            <password>__BINTRAY_TOKEN__</password>
         </server>
     </servers>
     <profiles>
+        <profile>
+            <id>gpg</id>
+            <properties>
+                <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
+                <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+            </properties>
+        </profile>
         <profile>
             <id>github</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
-                <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
-
                 <altDeploymentRepository>github::https://maven.pkg.github.com/traum-ferienwohnungen/testcontainers-proxy</altDeploymentRepository>
             </properties>
             <repositories>
@@ -24,6 +33,31 @@
                     <id>github</id>
                     <name>GitHub Apache Maven Packages</name>
                     <url>https://maven.pkg.github.com/traum-ferienwohnungen/testcontainers-proxy</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                </repository>
+            </repositories>
+        </profile>
+        <profile>
+            <id>bintray</id>
+            <properties>
+                <altDeploymentRepository>bintray::https://api.bintray.com/maven/traum-ferienwohnungen/maven/testcontainers-proxy/;publish=1</altDeploymentRepository>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>bintray</id>
+                    <name>JFrog Bintray Apache Maven Packages</name>
+                    <url>https://dl.bintray.com/traum-ferienwohnungen/maven</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
                 </repository>
             </repositories>
         </profile>

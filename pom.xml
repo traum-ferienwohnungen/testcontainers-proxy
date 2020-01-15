@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.traum</groupId>
     <artifactId>testcontainers-proxy-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.0-SNAPSHOT</version>
+    <version>999-SNAPSHOT</version>
+
+    <inceptionYear>2020</inceptionYear>
+
+    <organization>
+        <name>Traum-Ferienwohnungen GmbH</name>
+        <url>https://www.traum-ferienwohnungen.de/</url>
+    </organization>
+
+    <url>https://traum-ferienwohnungen.github.io/testcontainers-proxy/</url>
+
+    <developers>
+        <developer>
+            <name>Peter Schulz</name>
+            <email>schulz@traum-ferienwohnungen.de</email>
+        </developer>
+    </developers>
 
     <scm>
         <url>https://github.com/traum-ferienwohnungen/testcontainers-proxy/</url>
@@ -13,6 +30,15 @@
         <developerConnection>scm:git:git@github.com:traum-ferienwohnungen/testcontainers-proxy.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <modules>
         <module>testcontainers-proxy-mountebank</module>
         <module>testcontainers-proxy-quarkus</module>
@@ -21,7 +47,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <multi-release-base.skip>false</multi-release-base.skip>
         <surefire-plugin.version>2.22.1</surefire-plugin.version>
         <junit.version>5.5.2</junit.version>
 
@@ -91,17 +116,6 @@
                     <configuration>
                         <deployAtEnd>true</deployAtEnd>
                         <retryFailedDeploymentCount>2</retryFailedDeploymentCount>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>3.0.0-M1</version>
-                    <configuration>
-                        <goals>install</goals>
-                        <tagNameFormat>v@{project.version}</tagNameFormat>
-                        <developmentVersion>0.0.0-SNAPSHOT</developmentVersion>
-                        <useReleaseProfile>true</useReleaseProfile>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -195,6 +209,40 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>2.0.0</version>
+                    <configuration>
+                        <verbose>false</verbose>
+                        <licenseName>apache_v2</licenseName>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>update-file-header</id>
+                            <goals>
+                                <goal>update-file-header</goal>
+                            </goals>
+                            <phase>process-sources</phase>
+                            <configuration>
+                                <roots>
+                                    <root>src/main/java</root>
+                                    <root>src/test</root>
+                                </roots>
+                                <excludes>
+                                    <exclude>**/ReplacingInputStream.java</exclude>
+                                    <exclude>**/*Test.java</exclude>
+                                    <exclude>**/*IT.java</exclude>
+                                </excludes>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>2.7</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -203,26 +251,21 @@
                 <artifactId>maven-deploy-plugin</artifactId>
             </plugin>
             <plugin>
-                <artifactId>maven-release-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <artifactId>maven-source-plugin</artifactId>
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
 
     <profiles>
         <profile>
-            <id>github</id>
-            <properties>
-                <maven.source.skip>true</maven.source.skip>
-            </properties>
-        </profile>
-        <profile>
-            <id>release</id>
+            <id>gpg</id>
             <build>
                 <plugins>
                     <plugin>
