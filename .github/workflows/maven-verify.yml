@@ -2,6 +2,8 @@ name: Verify
 
 on:
   push:
+    tags-ignore:
+      - '*.*'
     branches:
       - master
 
