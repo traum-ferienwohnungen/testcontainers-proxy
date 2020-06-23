@@ -1,9 +1,11 @@
 package com.traum.mountebank;
 
+import com.traum.mountebank.MountebankExtension.MountebankProxyFactory;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -18,10 +20,15 @@ class MountebankExtensionTest {
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     ExtensionContext extensionContext;
 
-    @Mock
-    MountebankProxy externalProxy;
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    MountebankProxyFactory factory;
 
-    MountebankExtension extension = new MountebankExtension();
+    MountebankExtension extension;
+
+    @BeforeEach
+    void setup() {
+        extension = new MountebankExtension(factory);
+    }
 
     @Test
     void noArgAnnotationThrows() throws NoSuchMethodException {
@@ -42,7 +49,6 @@ class MountebankExtensionTest {
         final Optional<Method> testMethod = Optional.of(TestCaseWithMethodAndClassAnnotations.class.getDeclaredMethod("annotatedWithNoArgs"));
         BDDMockito.given(extensionContext.getTestClass()).willReturn(Optional.of(TestCaseWithMethodAndClassAnnotations.class));
         BDDMockito.given(extensionContext.getTestMethod()).willReturn(testMethod);
-        extension.setExternalProxy(externalProxy);
         Assertions.assertDoesNotThrow(() -> extension.beforeEach(extensionContext));
     }
 

@@ -156,7 +156,7 @@ class MountebankExtensionIT {
 First, extend `MountebankProxyTestResourceLifecycleManager` and override `start()` to obtain the proxy URL:
 
 ```java
-public class ProxyTestResourceLifecycleManager extends MountebankProxyTestResourceLifecycleManager {
+public class ProxyTestResource extends MountebankProxyTestResourceLifecycleManager {
     
     @Override
     public Map<String, String> start() {
@@ -172,11 +172,10 @@ public class ProxyTestResourceLifecycleManager extends MountebankProxyTestResour
 Then, use the class through `@QuarkusTestResource`:
 
 ```java
-@QuarkusTestResource(ProxyTestResourceLifecycleManager.class)
-class QuarkusTest {
-    
-    @RegisterExtension
-    MountebankExtension mountebank = new MountebankExtension();
+@QuarkusTest
+@QuarkusTestResource(ProxyTestResource.class)   // handles proxy lifecycle
+@ExtendWith(MountebankExtension.class)          // handles annotation processing
+class SomeQuarkusTest {
 
     @Test
     @MountebankExtension.WithProxy(initialImposters = "path/to/initial-imposters.json")

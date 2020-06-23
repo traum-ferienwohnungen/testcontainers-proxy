@@ -20,6 +20,9 @@ package com.traum.mountebank;
  * #L%
  */
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.traum.io.ReplacingInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -29,36 +32,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-import com.traum.io.ReplacingInputStream;
+public abstract class MountebankProxy {
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-public class MountebankProxy {
-
-    private static final int DEFAULT_PROXY_PORT = MountebankContainer.MOUNTEBANK_API_PORT * 2;
-
-    private final MountebankContainer container;
+    protected static final int DEFAULT_PROXY_PORT = MountebankContainer.MOUNTEBANK_API_PORT * 2;
 
     private final HttpClient client = HttpClient.newBuilder().build();
 
-    public MountebankProxy() {
-        this(new MountebankContainer(DEFAULT_PROXY_PORT));
-    }
-
-    public MountebankProxy(MountebankContainer container) {
-        this.container = container;
-    }
-
-    public MountebankContainer getContainer() {
-        return container;
-    }
-
     public void start() {
-        container.start();
+
     }
 
     public void stop() {
-        container.stop();
+
+    }
+
+    public boolean isRunning() {
+        return false;
     }
 
     public void importImposters(Path impostersInput) throws IOException {
@@ -98,15 +87,8 @@ public class MountebankProxy {
         }
     }
 
-    private String getApiUrl() {
-        return getUrl("http", MountebankContainer.MOUNTEBANK_API_PORT);
-    }
+    public abstract String getApiUrl();
 
-    public String getUrl() {
-        return getUrl("http", DEFAULT_PROXY_PORT);
-    }
+    public abstract String getUrl();
 
-    public String getUrl(String protocol, int internalPort) {
-        return protocol + "://" + container.getContainerIpAddress() + ":" + container.getMappedPort(internalPort);
-    }
 }

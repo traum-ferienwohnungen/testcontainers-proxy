@@ -20,39 +20,26 @@ package com.traum.mountebank.quarkus;
  * #L%
  */
 
-import java.util.Arrays;
-import java.util.Map;
-
+import com.traum.mountebank.ContainerMountebankProxy;
 import com.traum.mountebank.MountebankExtension;
 import com.traum.mountebank.MountebankProxy;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
+import java.util.Map;
 
 public class MountebankProxyTestResourceLifecycleManager implements QuarkusTestResourceLifecycleManager {
 
-    protected final MountebankProxy proxy = new MountebankProxy();
-
-    @Override
-    public void inject(Object testInstance) {
-        Arrays.stream(testInstance.getClass().getFields())
-                .filter(field -> field.getType().equals(MountebankExtension.class))
-                .forEach(field -> {
-                    try {
-                        ((MountebankExtension) field.get(testInstance)).setExternalProxy(proxy);
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException("failed to set proxy", e);
-                    }
-                });
-
-    }
+    protected final MountebankProxy proxy = new ContainerMountebankProxy();
 
     @Override
     public Map<String, String> start() {
-        proxy.getContainer().start();
+        proxy.start();
+        System.setProperty(MountebankExtension.EXTERNAL_PROXY_API_URL_PROPERTY, proxy.getApiUrl());
+        System.setProperty(MountebankExtension.EXTERNAL_PROXY_URL_PROPERTY, proxy.getUrl());
         return Map.of();
     }
 
     @Override
     public void stop() {
-        proxy.getContainer().stop();
+        proxy.stop();
     }
 }

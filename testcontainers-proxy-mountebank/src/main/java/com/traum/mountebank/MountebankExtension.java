@@ -9,9 +9,9 @@ package com.traum.mountebank;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,145 +30,110 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
+import org.junit.jupiter.api.extension.ExtensionContext.Store;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
 public class MountebankExtension implements
         BeforeEachCallback, AfterEachCallback,
-        BeforeAllCallback, AfterAllCallback,
         ParameterResolver {
 
-    private static final String STORE_KEY_PROXY = "proxy";
     private static final String STORE_KEY_OUTPUT = "output";
-
-    private MountebankProxy externalProxy;
-
-    private MountebankProxy classProxy;
-    private Future<MountebankProxy> classProxyLauncher;
+    private static final String STORE_KEY_PROXY = "proxy";
 
     private static final Pattern placeholderPattern = Pattern.compile("\\{([^}]+)\\}");
+    public static final String EXTERNAL_PROXY_API_URL_PROPERTY = "mountebank.external.proxy.api.url";
+    public static final String EXTERNAL_PROXY_URL_PROPERTY = "mountebank.external.proxy.url";
 
-    private Map<String, Function<ExtensionContext, String>> placeholders = Map.of(
+    private final Map<String, Function<ExtensionContext, String>> placeholders = Map.of(
             "method.name", context -> context.getTestMethod().map(Method::getName).orElseThrow(),
             "class.name", context -> context.getTestClass().map(Class::getName).map(name -> name.replace('$', '.')).orElseThrow()
     );
 
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final MountebankProxyFactory factory;
 
-    public void setExternalProxy(MountebankProxy externalProxy) {
-        this.externalProxy = externalProxy;
+    public MountebankExtension(MountebankProxyFactory factory) {
+        this.factory = factory;
     }
 
-    @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
-        if (externalProxy == null) {
-            context.getTestClass().map(testClass ->
-                    Arrays.stream(testClass.getDeclaredMethods())
-                            .filter(testMethod -> testMethod.getAnnotation(WithProxy.class) != null)
-                            .collect(Collectors.toList()))
-                    .filter(Predicate.not(List::isEmpty))
-                    .ifPresent(proxiedMethods -> {
-                        classProxy = createProxy();
-                        classProxyLauncher = executor.submit(() -> {
-                            classProxy.start();
-                            return classProxy;
-                        });
-                    });
-        }
-    }
-
-    @Override
-    public void afterAll(ExtensionContext context) throws Exception {
-        if (classProxy != null) {
-            classProxy.stop();
-        }
+    public MountebankExtension() {
+        this(new MountebankProxyFactory() {});
     }
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-        getAnnotation(extensionContext::getTestMethod)
-                .ifPresent(annotation -> {
-                    final Optional<Path> replayImposters = getPath(extensionContext, WithProxy::replayImposters);
-                    final Path importImposters = getPath(extensionContext, WithProxy::initialImposters)
-                            .filter(Files::exists)
-                            .map(initialPath -> replayImposters
-                                    .filter(replayPath -> {
-                                        try {
-                                            if (Files.exists(replayPath)) {
-                                                final WithProxy.InitPolicy initPolicy = getInitPolicy(extensionContext, WithProxy::initPolicy);
+        getAnnotation(extensionContext::getTestMethod).ifPresent(annotation -> {
+            final Optional<Path> replayImposters = getPath(extensionContext, WithProxy::replayImposters);
+            final Path importImposters = getPath(extensionContext, WithProxy::initialImposters)
+                    .filter(Files::exists)
+                    .map(initialPath -> replayImposters
+                            .filter(replayPath -> {
+                                try {
+                                    if (Files.exists(replayPath)) {
+                                        final WithProxy.InitPolicy initPolicy = getInitPolicy(extensionContext, WithProxy::initPolicy);
 
-                                                if (initPolicy == WithProxy.InitPolicy.IF_REPLAY_OUTDATED) {
-                                                    return Files.getLastModifiedTime(replayPath).compareTo(Files.getLastModifiedTime(initialPath)) > 0;
-                                                }
-                                                return initPolicy == WithProxy.InitPolicy.IF_REPLAY_NONEXISTENT;
-                                            }
-                                            return false;
-                                        } catch (IOException e) {
-                                            throw new IllegalArgumentException("failed to compare modification times", e);
+                                        if (initPolicy == WithProxy.InitPolicy.IF_REPLAY_OUTDATED) {
+                                            return Files.getLastModifiedTime(replayPath).compareTo(Files.getLastModifiedTime(initialPath)) > 0;
                                         }
-                                    })
-                                    .orElse(initialPath)
-                            )
-                            .orElseGet(() -> replayImposters
-                                    .orElseThrow(() -> new IllegalArgumentException("neither initial nor replay imposters are given or existent")));
+                                        return initPolicy == WithProxy.InitPolicy.IF_REPLAY_NONEXISTENT;
+                                    }
+                                    return false;
+                                } catch (IOException e) {
+                                    throw new IllegalArgumentException("Failed to compare modification times", e);
+                                }
+                            })
+                            .orElse(initialPath)
+                    )
+                    .orElseGet(() -> replayImposters
+                            .orElseThrow(() -> new IllegalArgumentException("Neither initial nor replay imposters are given or existent")));
 
-                    try {
-                        final ExtensionContext.Store store = extensionContext.getStore(ExtensionContext.Namespace.create(annotation));
-                        replayImposters.filter(Predicate.not(importImposters::equals)).ifPresent(outputPath -> store.put(STORE_KEY_OUTPUT, outputPath));
+            getProxy(extensionContext, true)
+                    .ifPresent(proxy -> {
+                        final Store store = getStore(extensionContext);
+                        replayImposters.filter(Predicate.not(importImposters::equals))
+                                .ifPresent(outputPath -> store.put(STORE_KEY_OUTPUT, outputPath));
 
-                        final MountebankProxy proxy = getProxy();
-                        proxy.start();
-                        proxy.importImposters(importImposters);
-
-                        store.put(STORE_KEY_PROXY, proxy);
-                    } catch (IOException | ExecutionException | InterruptedException e) {
-                        throw new RuntimeException("failed to inspect file", e);
-                    }
-                });
+                        try {
+                            if (!proxy.isRunning()) {
+                                proxy.start();
+                            }
+                            proxy.importImposters(importImposters);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Failed to inspect file", e);
+                        }
+                    });
+        });
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
-        getAnnotation(extensionContext::getTestMethod)
-                .ifPresent(annotation -> {
-                    final ExtensionContext.Store store = extensionContext.getStore(ExtensionContext.Namespace.create(annotation));
+        getProxy(extensionContext, false)
+                .ifPresent(proxy -> {
+                    final ExtensionContext.Store store = getStore(extensionContext);
                     final Path impostersOutput = (Path) store.get(STORE_KEY_OUTPUT);
-                    final MountebankProxy proxy = (MountebankProxy) store.get(STORE_KEY_PROXY);
 
-                    if (proxy != null) {
-                        if (impostersOutput != null) {
-                            proxy.saveImposters(impostersOutput, true);
-                        }
-
-                        getPath(extensionContext, WithProxy::recordImposters).ifPresent(path -> {
-                            proxy.saveImposters(path, false);
-                        });
-
-                        if (proxy != classProxy && proxy != externalProxy) {
-                            proxy.stop();
-                        }
+                    if (impostersOutput != null) {
+                        proxy.saveImposters(impostersOutput, true);
                     }
+
+                    getPath(extensionContext, WithProxy::recordImposters).ifPresent(path -> {
+                        proxy.saveImposters(path, false);
+                    });
+
+                    getProxy(extensionContext, STORE_KEY_PROXY).ifPresent(MountebankProxy::stop);
                 });
     }
 
@@ -181,19 +146,30 @@ public class MountebankExtension implements
 
     @Override
     public MountebankProxy resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return getAnnotation(extensionContext::getTestMethod)
-                .map(ExtensionContext.Namespace::create)
-                .map(extensionContext::getStore)
-                .map(store -> (MountebankProxy) store.get(STORE_KEY_PROXY))
-                .orElseThrow();
+        return getProxy(extensionContext, false).orElseThrow();
     }
 
-    private MountebankProxy getProxy() throws ExecutionException, InterruptedException {
-        return externalProxy != null ? externalProxy : (classProxy != null ? classProxyLauncher.get() : createProxy());
+    private Optional<MountebankProxy> getProxy(ExtensionContext extensionContext, boolean create) {
+        return getProxy(extensionContext, STORE_KEY_PROXY)
+                .or(() -> {
+                    if (create) {
+                        final MountebankProxy proxy = factory.create();
+                        getStore(extensionContext).put(STORE_KEY_PROXY, proxy);
+                        return Optional.of(proxy);
+                    }
+                    return Optional.empty();
+                });
     }
 
-    private MountebankProxy createProxy() {
-        return new MountebankProxy();
+    private Optional<MountebankProxy> getProxy(ExtensionContext context, String key) {
+        final Store store = getStore(context);
+
+        return Optional.ofNullable((MountebankProxy) store.get(key))
+                .or(() -> context.getParent().flatMap(parentContext -> getProxy(parentContext, key)));
+    }
+
+    private Store getStore(ExtensionContext context) {
+        return context.getStore(Namespace.GLOBAL);
     }
 
     private String replacePlaceholders(ExtensionContext extensionContext, String path) {
@@ -202,7 +178,7 @@ public class MountebankExtension implements
             final String placeholder = result.group(1);
             final Function<ExtensionContext, String> replacer = placeholders.get(placeholder);
             if (replacer == null) {
-                throw new IllegalArgumentException("unknown placeholder " + placeholder);
+                throw new IllegalArgumentException("Unknown placeholder " + placeholder);
             }
             return replacer.apply(extensionContext);
         });
@@ -237,23 +213,17 @@ public class MountebankExtension implements
 
 
         /**
-         * Path to ejs/json file.
-         * Used to initialize mountebank unless {@link #replayImposters()} is set or is outdated
-         * (depending on {@link #initPolicy()}).
+         * Path to ejs/json file. Used to initialize mountebank unless {@link #replayImposters()} is set or is outdated (depending on {@link #initPolicy()}).
          */
         String initialImposters() default "";
 
         /**
-         * Path to ejs/json file.
-         * If used with {@link #initialImposters()} this file is overridden with re-play-ready imposters
-         * previously recorded by the mountebank proxy.
+         * Path to ejs/json file. If used with {@link #initialImposters()} this file is overridden with re-play-ready imposters previously recorded by the mountebank proxy.
          */
         String replayImposters() default "";
 
         /**
-         * Path to ejs/json file.
-         * If given {@link #replayImposters()} is configured to record requests and the output is stored
-         * under the given path.
+         * Path to ejs/json file. If given {@link #replayImposters()} is configured to record requests and the output is stored under the given path.
          */
         String recordImposters() default "";
 
@@ -261,6 +231,8 @@ public class MountebankExtension implements
          * Determines if {@link #replayImposters()} is used.
          */
         InitPolicy initPolicy() default InitPolicy.IF_REPLAY_NONEXISTENT;
+
+
 
         enum InitPolicy {
             /**
@@ -276,7 +248,29 @@ public class MountebankExtension implements
             /**
              * Only use if {@link #replayImposters()} is older than {@link #initialImposters()}.
              */
-            IF_REPLAY_OUTDATED
+            IF_REPLAY_OUTDATED;
         }
     }
+
+    public interface MountebankProxyFactory {
+
+        default MountebankProxy create() {
+            if (System.getProperties().containsKey(EXTERNAL_PROXY_API_URL_PROPERTY) && System.getProperties().containsKey(EXTERNAL_PROXY_URL_PROPERTY)) {
+                return new ExternalMountebankProxy(
+                        System.getProperty(EXTERNAL_PROXY_API_URL_PROPERTY),
+                        System.getProperty(EXTERNAL_PROXY_URL_PROPERTY)
+                );
+            }
+            return new ContainerMountebankProxy();
+        }
+
+    }
+
 }
+
+
+
+
+
+
+
