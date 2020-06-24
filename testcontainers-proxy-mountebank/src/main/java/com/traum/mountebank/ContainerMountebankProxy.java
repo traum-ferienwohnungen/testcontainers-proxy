@@ -9,9 +9,9 @@ package com.traum.mountebank;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,53 +20,55 @@ package com.traum.mountebank;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.NoSuchElementException;
-
 public class ContainerMountebankProxy extends MountebankProxy {
 
-    private final MountebankContainer container;
+  private final MountebankContainer container;
 
-    public ContainerMountebankProxy() {
-        this(new Integer[0]);
-    }
+  public ContainerMountebankProxy() {
+    this(new Integer[0]);
+  }
 
-    public ContainerMountebankProxy(Integer...imposterPorts) {
-        this(imposterPorts.length == 0 ? new MountebankContainer(DEFAULT_PROXY_PORT) : new MountebankContainer(imposterPorts));
-    }
+  public ContainerMountebankProxy(Integer... imposterPorts) {
+    this(
+        imposterPorts.length == 0
+            ? new MountebankContainer(DEFAULT_PROXY_PORT)
+            : new MountebankContainer(imposterPorts));
+  }
 
-    public ContainerMountebankProxy(MountebankContainer container) {
-        this.container = container;
-    }
+  public ContainerMountebankProxy(MountebankContainer container) {
+    this.container = container;
+  }
 
-    public MountebankContainer getContainer() {
-        return container;
-    }
+  public MountebankContainer getContainer() {
+    return container;
+  }
 
-    @Override
-    public void start() {
-        container.start();
-    }
+  @Override
+  public void start() {
+    container.start();
+  }
 
-    @Override
-    public void stop() {
-        container.stop();
-    }
+  @Override
+  public void stop() {
+    container.stop();
+  }
 
-    @Override
-    public boolean isRunning() {
-        return container.isRunning();
-    }
+  @Override
+  public boolean isRunning() {
+    return container.isRunning();
+  }
 
-    @Override
-    public String getApiUrl()  {
-        return "http" + "://" + container.getContainerIpAddress() + ":" + container.getMappedPort(MountebankContainer.MOUNTEBANK_API_PORT);
-    }
+  @Override
+  public String getApiUrl() {
+    return "http"
+        + "://"
+        + container.getContainerIpAddress()
+        + ":"
+        + container.getMappedPort(MountebankContainer.MOUNTEBANK_API_PORT);
+  }
 
-    @Override
-    public String getImposterAuthority(int imposterPort) throws IllegalArgumentException {
-        return container.getContainerIpAddress() + ":" + getContainer().getMappedPort(imposterPort);
-    }
-
+  @Override
+  public String getImposterAuthority(int imposterPort) throws IllegalArgumentException {
+    return container.getContainerIpAddress() + ":" + getContainer().getMappedPort(imposterPort);
+  }
 }

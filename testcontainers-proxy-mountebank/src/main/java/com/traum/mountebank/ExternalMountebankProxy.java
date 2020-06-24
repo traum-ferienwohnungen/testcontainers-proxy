@@ -22,30 +22,27 @@ package com.traum.mountebank;
 
 import java.util.Map;
 
-/**
- * Facade for an externally managed instance of mountebank.
- */
+/** Facade for an externally managed instance of mountebank. */
 public class ExternalMountebankProxy extends MountebankProxy {
 
-    private final String apiUrl;
-    private final Map<Integer, String> imposterAuthorities;
+  private final String apiUrl;
+  private final Map<Integer, String> imposterAuthorities;
 
-    public ExternalMountebankProxy(String apiUrl, Map<Integer, String> imposterAuthorities) {
-        this.apiUrl = apiUrl;
-        this.imposterAuthorities = imposterAuthorities;
+  public ExternalMountebankProxy(String apiUrl, Map<Integer, String> imposterAuthorities) {
+    this.apiUrl = apiUrl;
+    this.imposterAuthorities = imposterAuthorities;
+  }
+
+  @Override
+  public String getApiUrl() {
+    return apiUrl;
+  }
+
+  @Override
+  public String getImposterAuthority(int imposterPort) throws IllegalArgumentException {
+    if (imposterAuthorities.containsKey(imposterPort)) {
+      return imposterAuthorities.get(imposterPort);
     }
-
-    @Override
-    public String getApiUrl() {
-        return apiUrl;
-    }
-
-    @Override
-    public String getImposterAuthority(int imposterPort) throws IllegalArgumentException {
-        if (imposterAuthorities.containsKey(imposterPort)) {
-            return imposterAuthorities.get(imposterPort);
-        }
-        throw new IllegalArgumentException("No mapped authority for imposter port " + imposterPort);
-    }
-
+    throw new IllegalArgumentException("No mapped authority for imposter port " + imposterPort);
+  }
 }

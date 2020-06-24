@@ -49,6 +49,7 @@
 
         <surefire-plugin.version>2.22.1</surefire-plugin.version>
         <junit.version>5.5.2</junit.version>
+        <spotless.version>1.31.0</spotless.version>
 
         <jacoco.aggregate.dataFile>${project.build.directory}/jacoco-aggregated.exec</jacoco.aggregate.dataFile>
     </properties>
@@ -260,6 +261,22 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless.version}</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <!-- Optional, available versions: https://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.google.googlejavaformat%22%20AND%20a%3A%22google-java-format%22 -->
+                            <version>1.5</version>
+                            <!-- Optional, available versions: GOOGLE, AOSP  https://github.com/google/google-java-format/blob/master/core/src/main/java/com/google/googlejavaformat/java/JavaFormatterOptions.java -->
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                    </java>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 
