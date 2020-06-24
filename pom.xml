@@ -6,7 +6,7 @@
     <groupId>com.traum</groupId>
     <artifactId>testcontainers-proxy-parent</artifactId>
     <packaging>pom</packaging>
-    <version>999-SNAPSHOT</version>
+    <version>0.7.3</version>
 
     <inceptionYear>2020</inceptionYear>
 
