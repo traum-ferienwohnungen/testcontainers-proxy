@@ -3,7 +3,7 @@
     <parent>
         <artifactId>testcontainers-proxy-parent</artifactId>
         <groupId>com.traum</groupId>
-        <version>999-SNAPSHOT</version>
+        <version>0.7.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
