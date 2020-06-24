@@ -20,6 +20,8 @@ package com.traum.mountebank;
  * #L%
  */
 
+import java.util.Collection;
+
 public class ContainerMountebankProxy extends MountebankProxy {
 
   private final MountebankContainer container;
@@ -71,4 +73,10 @@ public class ContainerMountebankProxy extends MountebankProxy {
   public String getImposterAuthority(int imposterPort) throws IllegalArgumentException {
     return container.getContainerIpAddress() + ":" + getContainer().getMappedPort(imposterPort);
   }
+
+  @Override
+  public Collection<Integer> getImposterPorts() {
+    return container.getImposterPorts();
+  }
+
 }

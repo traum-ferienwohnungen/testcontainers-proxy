@@ -31,6 +31,7 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Collection;
 
 public abstract class MountebankProxy {
 
@@ -99,4 +100,6 @@ public abstract class MountebankProxy {
   public abstract String getApiUrl();
 
   public abstract String getImposterAuthority(int imposterPort) throws IllegalArgumentException;
+
+  public abstract Collection<Integer> getImposterPorts();
 }

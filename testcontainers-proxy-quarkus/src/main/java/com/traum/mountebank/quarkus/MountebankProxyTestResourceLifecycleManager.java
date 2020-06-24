@@ -29,22 +29,25 @@ import java.util.Map;
 public class MountebankProxyTestResourceLifecycleManager
     implements QuarkusTestResourceLifecycleManager {
 
-  private final ContainerMountebankProxy proxy;
+  private final MountebankProxy proxy;
 
   public MountebankProxyTestResourceLifecycleManager() {
     this(new Integer[0]);
   }
 
   public MountebankProxyTestResourceLifecycleManager(Integer... imposterPorts) {
-    proxy = new ContainerMountebankProxy(imposterPorts);
+    this(new ContainerMountebankProxy(imposterPorts));
+  }
+
+  public MountebankProxyTestResourceLifecycleManager(MountebankProxy proxy) {
+    this.proxy = proxy;
   }
 
   @Override
   public Map<String, String> start() {
-    proxy.start();
+    getProxy().start();
     System.setProperty(MountebankExtension.EXTERNAL_PROXY_API_URL_PROPERTY, proxy.getApiUrl());
-    proxy
-        .getContainer()
+    getProxy()
         .getImposterPorts()
         .forEach(
             port -> {

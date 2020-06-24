@@ -20,6 +20,7 @@ package com.traum.mountebank;
  * #L%
  */
 
+import java.util.Collection;
 import java.util.Map;
 
 /** Facade for an externally managed instance of mountebank. */
@@ -45,4 +46,10 @@ public class ExternalMountebankProxy extends MountebankProxy {
     }
     throw new IllegalArgumentException("No mapped authority for imposter port " + imposterPort);
   }
+
+  @Override
+  public Collection<Integer> getImposterPorts() {
+    return imposterAuthorities.keySet();
+  }
+
 }
