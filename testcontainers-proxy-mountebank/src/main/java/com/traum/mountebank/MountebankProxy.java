@@ -35,8 +35,6 @@ import java.util.Collection;
 
 public abstract class MountebankProxy {
 
-  protected static final int DEFAULT_PROXY_PORT = MountebankContainer.MOUNTEBANK_API_PORT * 2;
-
   private final HttpClient client = HttpClient.newBuilder().build();
 
   public void start() {}

@@ -32,6 +32,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
 public class MountebankContainer extends GenericContainer<MountebankContainer> {
 
   static final int MOUNTEBANK_API_PORT = 2525;
+  static final int DEFAULT_PROXY_PORT = MOUNTEBANK_API_PORT * 2;
+
   private final List<Integer> imposterPorts;
 
   public MountebankContainer(Integer... imposterPorts) {
@@ -44,7 +46,7 @@ public class MountebankContainer extends GenericContainer<MountebankContainer> {
 
   public MountebankContainer(Consumer<OutputFrame> logConsumer, Integer... imposterPorts) {
     super("andyrbell/mountebank");
-    this.imposterPorts = List.of(imposterPorts);
+    this.imposterPorts = imposterPorts.length == 0 ? List.of(DEFAULT_PROXY_PORT) : List.of(imposterPorts);
 
     final Integer[] allPorts = new Integer[imposterPorts.length + 1];
     System.arraycopy(imposterPorts, 0, allPorts, 1, imposterPorts.length);

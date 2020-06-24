@@ -31,10 +31,7 @@ public class ContainerMountebankProxy extends MountebankProxy {
   }
 
   public ContainerMountebankProxy(Integer... imposterPorts) {
-    this(
-        imposterPorts.length == 0
-            ? new MountebankContainer(DEFAULT_PROXY_PORT)
-            : new MountebankContainer(imposterPorts));
+    this(new MountebankContainer(imposterPorts));
   }
 
   public ContainerMountebankProxy(MountebankContainer container) {

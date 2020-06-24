@@ -60,7 +60,7 @@ class MountebankExtensionIT {
     final String previousBody =
         GET(URI.create(
                 "http://"
-                    + proxy.getImposterAuthority(MountebankProxy.DEFAULT_PROXY_PORT)
+                    + proxy.getImposterAuthority(MountebankContainer.DEFAULT_PROXY_PORT)
                     + "/users/octocat"))
             .join();
     final Path responseBodyPath = Path.of(RESPONSE_OCTOCAT);
@@ -85,7 +85,7 @@ class MountebankExtensionIT {
     final String body =
         GET(URI.create(
                 "http://"
-                    + proxy.getImposterAuthority(MountebankProxy.DEFAULT_PROXY_PORT)
+                    + proxy.getImposterAuthority(MountebankContainer.DEFAULT_PROXY_PORT)
                     + "/users/octocat"))
             .join();
 
