@@ -163,7 +163,7 @@ public class ProxyTestResource extends MountebankProxyTestResourceLifecycleManag
      * The default constructor implicitly enables port 
      * {@value com.traum.mountebank.MountebankProxy.DEFAULT_PROXY_PORT}.
      */
-    public DataApiTestResource() {
+    public ProxyTestResource() {
         super(5050, 6060);
     }
     
