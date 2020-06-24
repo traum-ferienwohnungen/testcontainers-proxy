@@ -20,6 +20,7 @@ package com.traum.mountebank;
  * #L%
  */
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -48,12 +49,12 @@ public class MountebankContainer extends GenericContainer<MountebankContainer> {
     super("andyrbell/mountebank");
     this.imposterPorts = imposterPorts.length == 0 ? List.of(DEFAULT_PROXY_PORT) : List.of(imposterPorts);
 
-    final Integer[] allPorts = new Integer[imposterPorts.length + 1];
-    System.arraycopy(imposterPorts, 0, allPorts, 1, imposterPorts.length);
-    allPorts[0] = MOUNTEBANK_API_PORT;
+    final List<Integer> arrayList = new ArrayList<>(this.imposterPorts.size() + 1);
+    arrayList.add(MOUNTEBANK_API_PORT);
+    arrayList.addAll(this.imposterPorts);
 
     withReuse(true);
-    withExposedPorts(allPorts);
+    withExposedPorts(arrayList.toArray(Integer[]::new));
     withCommand("mb", "--debug");
     withLogConsumer(logConsumer);
     waitingFor(Wait.forLogMessage(".*now taking orders.*", 1));
