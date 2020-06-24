@@ -22,12 +22,18 @@ package com.traum.mountebank;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.NoSuchElementException;
+
 public class ContainerMountebankProxy extends MountebankProxy {
 
     private final MountebankContainer container;
 
     public ContainerMountebankProxy() {
-        this(new MountebankContainer(DEFAULT_PROXY_PORT));
+        this(new Integer[0]);
+    }
+
+    public ContainerMountebankProxy(Integer...imposterPorts) {
+        this(imposterPorts.length == 0 ? new MountebankContainer(DEFAULT_PROXY_PORT) : new MountebankContainer(imposterPorts));
     }
 
     public ContainerMountebankProxy(MountebankContainer container) {
@@ -55,15 +61,12 @@ public class ContainerMountebankProxy extends MountebankProxy {
 
     @Override
     public String getApiUrl()  {
-        return getUrl("http", MountebankContainer.MOUNTEBANK_API_PORT);
+        return "http" + "://" + container.getContainerIpAddress() + ":" + container.getMappedPort(MountebankContainer.MOUNTEBANK_API_PORT);
     }
 
     @Override
-    public String getUrl() {
-        return getUrl("http", DEFAULT_PROXY_PORT);
+    public String getImposterAuthority(int imposterPort) throws IllegalArgumentException {
+        return container.getContainerIpAddress() + ":" + getContainer().getMappedPort(imposterPort);
     }
 
-    public String getUrl(String protocol, int internalPort) {
-        return protocol + "://" + container.getContainerIpAddress() + ":" + container.getMappedPort(internalPort);
-    }
 }

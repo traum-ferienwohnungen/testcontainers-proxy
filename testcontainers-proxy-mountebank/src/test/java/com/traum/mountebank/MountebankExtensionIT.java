@@ -52,7 +52,7 @@ class MountebankExtensionIT {
     void initialize(MountebankProxy proxy) throws IOException {
         assertFalse(Files.exists(Paths.get(IMPOSTERS_OCTOCAT)));
 
-        final String previousBody = GET(URI.create(proxy.getUrl() + "/users/octocat")).join();
+        final String previousBody = GET(URI.create("http://" + proxy.getImposterAuthority(MountebankProxy.DEFAULT_PROXY_PORT) + "/users/octocat")).join();
         final Path responseBodyPath = Path.of(RESPONSE_OCTOCAT);
         Files.createDirectories(responseBodyPath.getParent());
         Files.write(responseBodyPath, previousBody.getBytes(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
@@ -69,7 +69,7 @@ class MountebankExtensionIT {
     void nowReplay(MountebankProxy proxy) throws IOException {
         assertTrue(Files.exists(Paths.get(IMPOSTERS_OCTOCAT)));
 
-        final String body = GET(URI.create(proxy.getUrl() + "/users/octocat")).join();
+        final String body = GET(URI.create("http://" + proxy.getImposterAuthority(MountebankProxy.DEFAULT_PROXY_PORT) + "/users/octocat")).join();
 
         final String previousBody = Files.readString(Path.of(RESPONSE_OCTOCAT));
         assertEquals(body, previousBody);

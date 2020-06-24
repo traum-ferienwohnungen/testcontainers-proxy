@@ -158,12 +158,19 @@ First, extend `MountebankProxyTestResourceLifecycleManager` and override `start(
 ```java
 public class ProxyTestResource extends MountebankProxyTestResourceLifecycleManager {
     
+    /**
+     * Optionally pass additional imposter ports to expose them from the container.
+     * The default constructor implicitly enables port 
+     * {@value com.traum.mountebank.MountebankProxy.DEFAULT_PROXY_PORT}.
+     */
+    public DataApiTestResource() {
+        super(5050, 6060);
+    }
+    
     @Override
     public Map<String, String> start() {
         super.start();
-           
-         // set quarkus application property
-        return Map.of("quarkus.property", this.proxy.getUrl());
+        return Map.of("api.url", "http://" + getProxy().getImposterAuthority(5050));
     }
 
 }
