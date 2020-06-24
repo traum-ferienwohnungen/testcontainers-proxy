@@ -20,17 +20,19 @@ package com.traum.mountebank;
  * #L%
  */
 
+import java.util.Map;
+
 /**
  * Facade for an externally managed instance of mountebank.
  */
 public class ExternalMountebankProxy extends MountebankProxy {
 
     private final String apiUrl;
-    private final String proxyUrl;
+    private final Map<Integer, String> imposterAuthorities;
 
-    public ExternalMountebankProxy(String apiUrl, String proxyUrl) {
+    public ExternalMountebankProxy(String apiUrl, Map<Integer, String> imposterAuthorities) {
         this.apiUrl = apiUrl;
-        this.proxyUrl = proxyUrl;
+        this.imposterAuthorities = imposterAuthorities;
     }
 
     @Override
@@ -39,7 +41,11 @@ public class ExternalMountebankProxy extends MountebankProxy {
     }
 
     @Override
-    public String getUrl() {
-        return proxyUrl;
+    public String getImposterAuthority(int imposterPort) throws IllegalArgumentException {
+        if (imposterAuthorities.containsKey(imposterPort)) {
+            return imposterAuthorities.get(imposterPort);
+        }
+        throw new IllegalArgumentException("No mapped authority for imposter port " + imposterPort);
     }
+
 }

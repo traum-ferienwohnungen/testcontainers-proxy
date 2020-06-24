@@ -89,6 +89,6 @@ public abstract class MountebankProxy {
 
     public abstract String getApiUrl();
 
-    public abstract String getUrl();
+    public abstract String getImposterAuthority(int imposterPort) throws IllegalArgumentException;
 
 }

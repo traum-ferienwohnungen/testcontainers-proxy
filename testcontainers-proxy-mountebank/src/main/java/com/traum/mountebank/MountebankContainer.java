@@ -20,6 +20,7 @@ package com.traum.mountebank;
  * #L%
  */
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 public class MountebankContainer extends GenericContainer<MountebankContainer> {
 
     static final int MOUNTEBANK_API_PORT = 2525;
+    private final List<Integer> imposterPorts;
 
     public MountebankContainer(Integer... imposterPorts) {
         this(new Slf4jLogConsumer(LoggerFactory.getLogger(MountebankContainer.class)), imposterPorts);
@@ -43,6 +45,7 @@ public class MountebankContainer extends GenericContainer<MountebankContainer> {
 
     public MountebankContainer(Consumer<OutputFrame> logConsumer, Integer... imposterPorts) {
         super("andyrbell/mountebank");
+        this.imposterPorts = List.of(imposterPorts);
 
         final Integer[] allPorts = new Integer[imposterPorts.length + 1];
         System.arraycopy(imposterPorts, 0, allPorts, 1, imposterPorts.length);
@@ -54,4 +57,9 @@ public class MountebankContainer extends GenericContainer<MountebankContainer> {
         withLogConsumer(logConsumer);
         waitingFor(Wait.forLogMessage(".*now taking orders.*", 1));
     }
+
+    public List<Integer> getImposterPorts() {
+        return imposterPorts;
+    }
+
 }

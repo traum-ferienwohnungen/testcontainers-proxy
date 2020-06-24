@@ -30,9 +30,10 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -51,12 +52,14 @@ public class MountebankExtension implements
         BeforeEachCallback, AfterEachCallback,
         ParameterResolver {
 
+    public static final String EXTERNAL_PROXY_PROPERTY_PREFIX = "mountebank.external.proxy";
+    public static final String EXTERNAL_PROXY_API_URL_PROPERTY = EXTERNAL_PROXY_PROPERTY_PREFIX + ".api.url";
+
     private static final String STORE_KEY_OUTPUT = "output";
     private static final String STORE_KEY_PROXY = "proxy";
 
-    private static final Pattern placeholderPattern = Pattern.compile("\\{([^}]+)\\}");
-    public static final String EXTERNAL_PROXY_API_URL_PROPERTY = "mountebank.external.proxy.api.url";
-    public static final String EXTERNAL_PROXY_URL_PROPERTY = "mountebank.external.proxy.url";
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([^}]+)\\}");
+    private static final Pattern EXTERNAL_PROXY_IMPOSTER_AUTHORITIES = Pattern.compile(Pattern.quote(EXTERNAL_PROXY_PROPERTY_PREFIX) + "\\.(\\d+)\\.authority");
 
     private final Map<String, Function<ExtensionContext, String>> placeholders = Map.of(
             "method.name", context -> context.getTestMethod().map(Method::getName).orElseThrow(),
@@ -70,7 +73,8 @@ public class MountebankExtension implements
     }
 
     public MountebankExtension() {
-        this(new MountebankProxyFactory() {});
+        this(new MountebankProxyFactory() {
+        });
     }
 
     @Override
@@ -173,7 +177,7 @@ public class MountebankExtension implements
     }
 
     private String replacePlaceholders(ExtensionContext extensionContext, String path) {
-        final Matcher matcher = placeholderPattern.matcher(path);
+        final Matcher matcher = PLACEHOLDER_PATTERN.matcher(path);
         return matcher.replaceAll(result -> {
             final String placeholder = result.group(1);
             final Function<ExtensionContext, String> replacer = placeholders.get(placeholder);
@@ -233,7 +237,6 @@ public class MountebankExtension implements
         InitPolicy initPolicy() default InitPolicy.IF_REPLAY_NONEXISTENT;
 
 
-
         enum InitPolicy {
             /**
              * Always use {@link #initialImposters()}.
@@ -250,16 +253,26 @@ public class MountebankExtension implements
              */
             IF_REPLAY_OUTDATED;
         }
+
     }
 
     public interface MountebankProxyFactory {
 
         default MountebankProxy create() {
-            if (System.getProperties().containsKey(EXTERNAL_PROXY_API_URL_PROPERTY) && System.getProperties().containsKey(EXTERNAL_PROXY_URL_PROPERTY)) {
-                return new ExternalMountebankProxy(
-                        System.getProperty(EXTERNAL_PROXY_API_URL_PROPERTY),
-                        System.getProperty(EXTERNAL_PROXY_URL_PROPERTY)
-                );
+            if (System.getProperties().containsKey(EXTERNAL_PROXY_API_URL_PROPERTY)) {
+                final HashMap<Integer, String> imposterAuthorities = Collections.list(System.getProperties().keys()).stream()
+                        .map(key -> EXTERNAL_PROXY_IMPOSTER_AUTHORITIES.matcher((CharSequence) key))
+                        .filter(Matcher::find)
+                        .map(matcher -> Map.entry(Integer.parseInt(matcher.group(1)), System.getProperties().getProperty(matcher.group(0))))
+                        .reduce(new HashMap<>(), (identity, entry) -> {
+                            identity.put(entry.getKey(), entry.getValue());
+                            return identity;
+                        }, (a, b) -> {
+                            a.putAll(b);
+                            return a;
+                        });
+
+                return new ExternalMountebankProxy(System.getProperty(EXTERNAL_PROXY_API_URL_PROPERTY), imposterAuthorities);
             }
             return new ContainerMountebankProxy();
         }
